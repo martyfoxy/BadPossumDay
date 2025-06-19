@@ -7,9 +7,9 @@
 ABadPossumDayGameMode::ABadPossumDayGameMode()
 {
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+	static ConstructorHelpers::FClassFinder<APawn> EditorPawnBPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_EditorPawn"));
+	if (EditorPawnBPClass.Class != NULL)
 	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
+		DefaultPawnClass = EditorPawnBPClass.Class;
 	}
 }
