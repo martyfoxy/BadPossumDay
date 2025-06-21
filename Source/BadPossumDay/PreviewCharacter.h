@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/FCharacterCustomizationData.h"
 #include "GameFramework/Actor.h"
 #include "PreviewCharacter.generated.h"
 
@@ -19,8 +20,22 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
+public:
+	void SetupMorphs();
+
+	UFUNCTION(BlueprintCallable)
+	TArray<FMorphTargetData> GetMorphTargets() const { return CustomizationData.MorphTargets; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetMorph(FString MorphName, float Value);
+
 private:
 	UPROPERTY(EditAnywhere)
-	USkeletalMeshComponent* SkeletalMesh;
-	
+	USkeletalMeshComponent* BodyMesh;
+
+	UPROPERTY(EditAnywhere)
+	USkeletalMeshComponent* EyesMesh;
+
+	UPROPERTY(EditAnywhere)
+	FCharacterCustomizationData CustomizationData;
 };
