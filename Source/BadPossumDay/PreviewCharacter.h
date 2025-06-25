@@ -6,10 +6,33 @@
 #include "GameFramework/Actor.h"
 #include "PreviewCharacter.generated.h"
 
+class UBoxComponent;
+
 UCLASS()
 class BADPOSSUMDAY_API APreviewCharacter : public AActor
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	USkeletalMeshComponent* BodyMesh;
+
+	UPROPERTY(EditAnywhere)
+	USkeletalMeshComponent* EyesMesh;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* BoxComponent;
+
+	UPROPERTY(EditAnywhere)
+	FCharacterCustomizationData CustomizationData;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* HeadFocus;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* BodyFocus;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* PawsFocus;
 	
 public:	
 	APreviewCharacter();
@@ -21,21 +44,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	void SetupMorphs();
-
 	UFUNCTION(BlueprintCallable)
 	TArray<FMorphTargetData> GetMorphTargets() const { return CustomizationData.MorphTargets; }
 
 	UFUNCTION(BlueprintCallable)
 	void SetMorph(FString MorphName, float Value);
-
+	
 private:
-	UPROPERTY(EditAnywhere)
-	USkeletalMeshComponent* BodyMesh;
-
-	UPROPERTY(EditAnywhere)
-	USkeletalMeshComponent* EyesMesh;
-
-	UPROPERTY(EditAnywhere)
-	FCharacterCustomizationData CustomizationData;
+	void SetupMorphs();
 };

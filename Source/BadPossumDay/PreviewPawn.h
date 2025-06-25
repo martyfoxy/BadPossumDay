@@ -13,6 +13,9 @@ class BADPOSSUMDAY_API APreviewPawn : public APawn
 {
 	GENERATED_BODY()
 
+private:
+	bool bRotatingCharacter = false;
+	
 public:
 	APreviewPawn();
 
@@ -21,7 +24,6 @@ protected:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
@@ -43,4 +45,7 @@ private:
 
 	void CreateEditorWidget() const;
 	void SpawnPreviewCharacter();
+	void TurnCharacter(float value);
+	void OnMouseClicked();
+	void OnMouseReleased();
 };

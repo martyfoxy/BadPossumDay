@@ -1,22 +1,28 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PreviewGameMode.h"
 
 #include "PreviewPawn.h"
+#include "PreviewPlayerController.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 APreviewGameMode::APreviewGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APreviewPawn> BPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_PreviewPawn"));
-	if (BPClass.Succeeded())
+	static ConstructorHelpers::FClassFinder<APreviewPawn> BPPreviewPawn(TEXT("/Game/ThirdPerson/Blueprints/BP_PreviewPawn"));
+	if (BPPreviewPawn.Succeeded())
 	{
-		DefaultPawnClass = BPClass.Class;
+		DefaultPawnClass = BPPreviewPawn.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<APreviewPlayerController> BPPreviewPlayerController(TEXT("/Game/Characters/BP_PreviewPlayerController"));
+	if (BPPreviewPlayerController.Succeeded())
+	{
+		PlayerControllerClass = BPPreviewPlayerController.Class;
 	}
 }
 
 void APreviewGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
 }

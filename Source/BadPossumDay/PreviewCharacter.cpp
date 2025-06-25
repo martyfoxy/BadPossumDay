@@ -2,6 +2,8 @@
 
 #include "PreviewCharacter.h"
 
+#include "Components/BoxComponent.h"
+
 APreviewCharacter::APreviewCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -13,6 +15,24 @@ APreviewCharacter::APreviewCharacter()
 
 	EyesMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("EyesMesh"));
 	EyesMesh->SetupAttachment(BodyMesh);
+
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+	BoxComponent->SetupAttachment(RootComponent);
+	BoxComponent->SetRelativeLocation(FVector(0.f,0.f,90.f));
+	BoxComponent->SetRelativeScale3D(FVector(1.25f, 1.f, 3.f));
+	BoxComponent->SetCollisionProfileName(FName("BlockAll"));
+
+	HeadFocus = CreateDefaultSubobject<USceneComponent>(TEXT("HeadFocus"));
+	HeadFocus->SetupAttachment(BodyMesh);
+	HeadFocus->SetRelativeLocation(FVector(0.f,0.f,150.f));
+
+	BodyFocus = CreateDefaultSubobject<USceneComponent>(TEXT("BodyFocus"));
+	BodyFocus->SetupAttachment(BodyMesh);
+	BodyFocus->SetRelativeLocation(FVector(0.f,0.f,100.f));
+
+	PawsFocus = CreateDefaultSubobject<USceneComponent>(TEXT("PawsFocus"));
+	PawsFocus->SetupAttachment(BodyMesh);
+	PawsFocus->SetRelativeLocation(FVector(0.f,0.f,50.f));
 }
 
 void APreviewCharacter::BeginPlay()

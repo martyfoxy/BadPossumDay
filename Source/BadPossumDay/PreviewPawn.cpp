@@ -5,6 +5,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+const float TurnSensitivity = 3.f;
+
 APreviewPawn::APreviewPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -18,10 +20,10 @@ APreviewPawn::APreviewPawn()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComponent);
 
-	static ConstructorHelpers::FClassFinder<APreviewCharacter> BpClass(TEXT("/Game/Characters/Meow/BP_PreviewCharacter"));
-	if (BpClass.Succeeded())
+	static ConstructorHelpers::FClassFinder<APreviewCharacter> PreviewCharacterBp(TEXT("/Game/Characters/Meow/BP_PreviewCharacter"));
+	if (PreviewCharacterBp.Succeeded())
 	{
-		PreviewCharacterClass = BpClass.Class;
+		PreviewCharacterClass = PreviewCharacterBp.Class;
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> EditorWidget(TEXT("/Game/UI/WB_CharacterEditor"));
@@ -47,6 +49,10 @@ void APreviewPawn::Tick(float DeltaTime)
 void APreviewPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis("MouseX", this, &APreviewPawn::TurnCharacter);
+	PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &APreviewPawn::OnMouseClicked);
+	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &APreviewPawn::OnMouseReleased);
 }
 
 void APreviewPawn::SpawnPreviewCharacter()
@@ -93,3 +99,41 @@ void APreviewPawn::CreateEditorWidget() const
 		}
 	}
 }
+
+void APreviewPawn::TurnCharacter(float value)
+{
+	if (bRotatingCharacter && PreviewCharacter)
+	{
+		FRotator PreviousRotator = PreviewCharacter->GetActorRotation();
+		PreviousRotator.Yaw -= value * TurnSensitivity;
+		PreviewCharacter->SetActorRotation(PreviousRotator);
+	}
+}
+
+void APreviewPawn::OnMouseClicked()
+{
+	FHitResult Hit;
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+	bool HasHit = PC->GetHitResultUnderCursor(ECC_PhysicsBody, false, Hit);
+	
+	if (HasHit)
+	{
+		FString ActorName = GetNameSafe(Hit.GetActor());
+		
+		if (Hit.GetActor() == PreviewCharacter)
+		{
+			bRotatingCharacter = true;
+			return;
+		}
+	}
+
+	bRotatingCharacter = false;
+}
+
+void APreviewPawn::OnMouseReleased()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Mouse released"));
+	bRotatingCharacter = false;
+}
+
