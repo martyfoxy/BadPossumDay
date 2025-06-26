@@ -5,8 +5,6 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
-const float TurnSensitivity = 3.f;
-
 APreviewPawn::APreviewPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -16,7 +14,10 @@ APreviewPawn::APreviewPawn()
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm Component"));
 	SpringArmComponent->SetupAttachment(RootComponent);
 	SpringArmComponent->bDoCollisionTest = false;
-	
+	SpringArmComponent->TargetArmLength = DefaultSpringArmLength;
+	SpringArmComponent->TargetOffset.Y = DefaultYOffset;
+	SpringArmComponent->TargetOffset.Z = DefaultZOffset;
+
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComponent);
 
@@ -27,7 +28,7 @@ APreviewPawn::APreviewPawn()
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> EditorWidget(TEXT("/Game/UI/WB_CharacterEditor"));
-	if(EditorWidget.Succeeded())
+	if (EditorWidget.Succeeded())
 	{
 		EditorWidgetClass = EditorWidget.Class;
 	}
@@ -37,13 +38,32 @@ void APreviewPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SpawnPreviewCharacter();	
+	SpawnPreviewCharacter();
 	CreateEditorWidget();
 }
 
 void APreviewPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (SpringArmComponent)
+	{
+		float CurrentLength = SpringArmComponent->TargetArmLength;
+		SpringArmComponent->TargetArmLength = FMath::FInterpTo(CurrentLength, TargetSpringArmLength, DeltaTime, 15.f);
+	}
+	
+	if (SpringArmComponent)
+	{
+		FVector CurrentOffset = SpringArmComponent->TargetOffset;
+		SpringArmComponent->TargetOffset.Y = FMath::FInterpTo(CurrentOffset.Y, TargetYOffset, DeltaTime, 15.f);
+		SpringArmComponent->TargetOffset.Z = FMath::FInterpTo(CurrentOffset.Z, TargetZOffset, DeltaTime, 15.f);
+
+		FRotator CurrentRotation = SpringArmComponent->GetRelativeRotation();
+		SpringArmComponent->SetRelativeRotation(FRotator(
+			FMath::FInterpTo(CurrentRotation.Pitch, TargetPitch, DeltaTime, 15.f), 
+			FMath::FInterpTo(CurrentRotation.Yaw, TargetYaw, DeltaTime, 15.f),
+			0.f));
+	}
 }
 
 void APreviewPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -53,6 +73,7 @@ void APreviewPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis("MouseX", this, &APreviewPawn::TurnCharacter);
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &APreviewPawn::OnMouseClicked);
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &APreviewPawn::OnMouseReleased);
+	PlayerInputComponent->BindAxis("MouseWheel", this, &APreviewPawn::Zoom);
 }
 
 void APreviewPawn::SpawnPreviewCharacter()
@@ -61,16 +82,16 @@ void APreviewPawn::SpawnPreviewCharacter()
 	SpawnParameters.Owner = this;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	FVector SpawnLocation = FVector(-380.f,-80.f,20.f);
-	FRotator SpawnRotation = FRotator(0.f,-90.f,0.f);
+	FVector SpawnLocation = FVector(-380.f, -80.f, 20.f);
+	FRotator SpawnRotation = FRotator(0.f, -90.f, 0.f);
 
 	if (PreviewCharacterClass)
 	{
 		PreviewCharacter = GetWorld()->SpawnActor<APreviewCharacter>(
-		PreviewCharacterClass,
-		SpawnLocation,
-		SpawnRotation,
-		SpawnParameters);
+			PreviewCharacterClass,
+			SpawnLocation,
+			SpawnRotation,
+			SpawnParameters);
 	}
 }
 
@@ -82,7 +103,7 @@ void APreviewPawn::CreateEditorWidget() const
 		if (Widget)
 		{
 			Widget->AddToViewport();
-			
+
 			UFunction* InitFunc = Widget->FindFunction(FName("Initialize"));
 			if (InitFunc)
 			{
@@ -90,7 +111,7 @@ void APreviewPawn::CreateEditorWidget() const
 				{
 					APreviewCharacter* PreviewCharacter;
 				};
-				
+
 				FInitParams Params;
 				Params.PreviewCharacter = PreviewCharacter;
 
@@ -102,11 +123,11 @@ void APreviewPawn::CreateEditorWidget() const
 
 void APreviewPawn::TurnCharacter(float value)
 {
-	if (bRotatingCharacter && PreviewCharacter)
-	{
-		FRotator PreviousRotator = PreviewCharacter->GetActorRotation();
-		PreviousRotator.Yaw -= value * TurnSensitivity;
-		PreviewCharacter->SetActorRotation(PreviousRotator);
+	 if (bRotatingCharacter && PreviewCharacter)
+	 {
+	 	FRotator PreviousRotator = PreviewCharacter->GetActorRotation();
+	 	PreviousRotator.Yaw -= value * TurnSensitivity;
+	 	PreviewCharacter->SetActorRotation(PreviousRotator);
 	}
 }
 
@@ -116,11 +137,11 @@ void APreviewPawn::OnMouseClicked()
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	bool HasHit = PC->GetHitResultUnderCursor(ECC_PhysicsBody, false, Hit);
-	
+
 	if (HasHit)
 	{
 		FString ActorName = GetNameSafe(Hit.GetActor());
-		
+
 		if (Hit.GetActor() == PreviewCharacter)
 		{
 			bRotatingCharacter = true;
@@ -133,7 +154,30 @@ void APreviewPawn::OnMouseClicked()
 
 void APreviewPawn::OnMouseReleased()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Mouse released"));
 	bRotatingCharacter = false;
 }
 
+void APreviewPawn::Zoom(float value)
+{
+	if (bRotatingCharacter)
+		return;
+	
+	if (SpringArmComponent)
+	{
+		//Zoom
+		TargetSpringArmLength = SpringArmComponent->TargetArmLength - value * ZoomSensitivity;
+		TargetSpringArmLength = FMath::Clamp(TargetSpringArmLength, MinSpringArmLength, MaxSpringArmLength);
+		
+		//Angle and offset adjustments
+		if (TargetSpringArmLength <= ActivationSpringArmLength)
+		{
+			TargetPitch = FMath::Lerp(FocusedYawPitch, 0.f, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
+			TargetYaw = FMath::Lerp(FocusedYawPitch, 0.f, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
+			//SpringArmComponent->SetRelativeRotation(FRotator(TargetPitch, TargetYaw, 0));
+
+			TargetYOffset = FMath::Lerp(FocusedYOffset, DefaultYOffset, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
+			TargetZOffset = FMath::Lerp(FocusedZOffset, DefaultZOffset, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
+			//SpringArmComponent->TargetOffset = FVector(0.f, TargetYOffset, TargetZOffset);
+		}		
+	}
+}

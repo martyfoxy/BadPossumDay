@@ -12,7 +12,8 @@ UCLASS()
 class BADPOSSUMDAY_API APreviewCharacter : public AActor
 {
 	GENERATED_BODY()
-
+	
+public:
 	UPROPERTY(EditAnywhere)
 	USkeletalMeshComponent* BodyMesh;
 
