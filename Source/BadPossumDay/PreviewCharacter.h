@@ -18,10 +18,10 @@ public:
 	USkeletalMeshComponent* BodyMesh;
 
 	UPROPERTY(EditAnywhere)
-	USkeletalMeshComponent* EyesMesh;
+	UBoxComponent* BoxComponent;
 
 	UPROPERTY(EditAnywhere)
-	UBoxComponent* BoxComponent;
+	UAnimMontage* IdleAnimMontage;
 
 	UPROPERTY(EditAnywhere)
 	FCharacterCustomizationData CustomizationData;
@@ -34,6 +34,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* PawsFocus;
+
 	
 public:	
 	APreviewCharacter();

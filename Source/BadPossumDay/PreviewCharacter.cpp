@@ -12,10 +12,7 @@ APreviewCharacter::APreviewCharacter()
 
 	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BodyMesh"));
 	BodyMesh->SetupAttachment(RootComponent);
-
-	EyesMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("EyesMesh"));
-	EyesMesh->SetupAttachment(BodyMesh);
-
+	
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
 	BoxComponent->SetupAttachment(RootComponent);
 	BoxComponent->SetRelativeLocation(FVector(0.f,0.f,90.f));
@@ -40,6 +37,15 @@ void APreviewCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	SetupMorphs();
+	
+	if (BodyMesh && BodyMesh->GetAnimInstance())
+	{
+		UAnimInstance* AnimInstance = BodyMesh->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(IdleAnimMontage, 1.f);
+		}
+	}
 }
 
 void APreviewCharacter::Tick(float DeltaTime)

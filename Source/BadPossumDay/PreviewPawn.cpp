@@ -164,20 +164,16 @@ void APreviewPawn::Zoom(float value)
 	
 	if (SpringArmComponent)
 	{
-		//Zoom
 		TargetSpringArmLength = SpringArmComponent->TargetArmLength - value * ZoomSensitivity;
 		TargetSpringArmLength = FMath::Clamp(TargetSpringArmLength, MinSpringArmLength, MaxSpringArmLength);
 		
-		//Angle and offset adjustments
 		if (TargetSpringArmLength <= ActivationSpringArmLength)
 		{
 			TargetPitch = FMath::Lerp(FocusedYawPitch, 0.f, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
 			TargetYaw = FMath::Lerp(FocusedYawPitch, 0.f, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
-			//SpringArmComponent->SetRelativeRotation(FRotator(TargetPitch, TargetYaw, 0));
 
 			TargetYOffset = FMath::Lerp(FocusedYOffset, DefaultYOffset, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
 			TargetZOffset = FMath::Lerp(FocusedZOffset, DefaultZOffset, (TargetSpringArmLength-MinSpringArmLength)/(ActivationSpringArmLength-MinSpringArmLength));
-			//SpringArmComponent->TargetOffset = FVector(0.f, TargetYOffset, TargetZOffset);
 		}		
 	}
 }
